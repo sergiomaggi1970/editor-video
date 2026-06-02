@@ -3,17 +3,20 @@ name: Build Windows EXE
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # permite disparar manualmente pelo site do GitHub
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build-windows:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout repositório
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Instalar Python 3.11
+      - name: Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
@@ -24,33 +27,19 @@ jobs:
       - name: Build .exe
         run: pyinstaller editor_globo.spec
 
-      - name: Verificar build
-        run: |
-          dir dist\
-          echo "Tamanho do EXE:"
-          (Get-Item "dist\Editor-Video-OGlobo.exe").length / 1MB
-
-      - name: Upload do EXE como artefato
+      - name: Upload artefato
         uses: actions/upload-artifact@v4
         with:
           name: Editor-Video-OGlobo-Windows
           path: dist\Editor-Video-OGlobo.exe
           retention-days: 30
 
-      - name: Criar Release automático
+      - name: Criar Release
         uses: softprops/action-gh-release@v2
-        if: github.ref == 'refs/heads/main'
         with:
           tag_name: "build-${{ github.run_number }}"
           name: "Editor de Vídeo O Globo — Build ${{ github.run_number }}"
           body: |
-            ## Editor de Vídeo — O Globo
-
-            **Instalação:** baixe o `.exe` abaixo e dê duplo clique. Não precisa instalar nada.
-
-            **Requisitos:** Windows 10 ou 11, Chrome ou Edge instalado.
+            Baixe o `.exe` abaixo e dê duplo clique. Não precisa instalar nada.
+            Requisitos: Windows 10/11, Chrome ou Edge.
           files: dist\Editor-Video-OGlobo.exe
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
